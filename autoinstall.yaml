@@ -1,0 +1,80 @@
+# Informações gerais
+autoinstall:
+  version: 1
+  apt:
+    preserve_sources_list: false
+    primary:
+      - arches: [default]
+        uri: http://archive.ubuntu.com/ubuntu
+  identity:
+    hostname: ubuntu-desktop
+    username: user
+    password: $6$rounds=4096$YqCJi4gmC9KE3... # Insira a senha criptografada aqui
+  ssh:
+    allow-pw: true
+    authorized-keys: []
+  locale: pt_BR
+  keyboard:
+    layout: br
+    variant: thinkpad
+  storage:
+    layout:
+      name: direct
+  user-data:
+    encrypt-home: true
+  network:
+    network:
+      version: 2
+      ethernets:
+        ens160:
+          dhcp4: true
+  packages:
+    - ubuntu-desktop
+    - curl
+    - git-all
+    - ca-certificates
+    - build-essential
+    - libssl-dev
+    - zlib1g-dev
+    - libbz2-dev
+    - libreadline-dev
+    - libsqlite3-dev
+    - wget
+    - llvm
+    - libncurses5-dev
+    - libncursesw5-dev
+    - xz-utils
+    - tk-dev
+    - libxml2-dev
+    - libxmlsec1-dev
+    - libffi-dev
+    - liblzma-dev
+    - gnupg
+    - software-properties-common
+  late-commands:
+    - "echo 'Late commands executed' > /target/late_commands.txt"
+    - "chroot /target apt update -y"
+    - "chroot /target apt install -y software-properties-common"
+    - "chroot /target apt install -y apt-transport-https ca-certificates curl software-properties-common build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev gnupg"
+    - "chroot /target mkdir -m 0755 -p /etc/apt/keyrings"
+    - "chroot /target curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc"
+    - "chroot /target chmod a+r /etc/apt/keyrings/docker.asc"
+    - 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | chroot /target tee /etc/apt/sources.list.d/docker.list > /dev/null'
+    - "chroot /target apt-get update"
+    - "chroot /target apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose"
+    - "chroot /target wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+    - "chroot /target dpkg -i /google-chrome-stable_current_amd64.deb"
+    - "chroot /target apt-get install -y wget gpg"
+    - "chroot /target wget -qO- https://packages.microsoft.com/keys/microsoft.asc | chroot /target gpg --dearmor > /etc/apt/keyrings/packages.microsoft.gpg"
+    - "chroot /target install -D -o root -g root -m 644 /etc/apt/keyrings/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg"
+    - 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | chroot /target tee /etc/apt/sources.list.d/vscode.list > /dev/null'
+    - "chroot /target rm -f /etc/apt/keyrings/packages.microsoft.gpg"
+    - "chroot /target apt-get update"
+    - "chroot /target apt-get install -y code"
+    - "chroot /target curl https://pyenv.run | bash"
+    - 'echo "export PATH="$HOME/.pyenv/bin:$PATH"" | chroot /target tee -a /etc/profile'
+    - "chroot /target echo 'eval "$(pyenv init --path)"' >> /etc/profile"
+    - "chroot /target echo 'eval "$(pyenv virtualenv-init -)"' >> /etc/profile"
+    - "chroot /target curl https://sdk.cloud.google.com | bash"
+    - "chroot /target curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - "chroot /target install -o root -g root -m 0755 /kubectl /usr/local/bin/kubectl"
